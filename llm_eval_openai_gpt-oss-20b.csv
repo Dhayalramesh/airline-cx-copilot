@@ -1,0 +1,7 @@
+aspect,accuracy,macro_f1,negative_f1,n_gold_negative
+seat,0.96,0.958,0.963,28
+crew,0.87,0.865,0.806,32
+food,0.95,0.918,0.857,15
+ground_baggage,0.84,0.811,0.844,34
+delays,0.93,0.913,0.939,33
+value,0.86,0.847,0.87,36

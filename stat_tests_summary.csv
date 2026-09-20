@@ -1,6 +1,0 @@
-test,statistic,p_value,effect_size
-chi-square cabin class vs recommended,416.4,6.07976101139814e-90,0.138
-premium (Business/First) minus Economy recommend rate,0.217,3.3257662918371875e-92,"95% CI [+0.195, +0.238]"
-Kruskal-Wallis rating by traveller type,131.6,2.4129690302414715e-28,0.0066
-Mann-Whitney verified vs unverified rating,52432885.0,4.713494729787105e-86,0.427
-"Wilcoxon: same-airline change in recommend rate, pre-2020 vs 2022+",-0.048,0.04816942294057708,"42 airlines, share declined 0.60"

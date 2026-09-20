@@ -49,11 +49,14 @@ def wilson(k, n, z=1.96):
 
 
 def error_bar_chart(df, y, x, lo, hi, x_title):
+    ax = alt.Axis(labelOverlap=False, labelLimit=320, title=None)
     base = alt.Chart(df)
-    rule = base.mark_rule().encode(y=alt.Y(f'{y}:N', sort=None, title=None), x=alt.X(f'{lo}:Q', title=x_title), x2=f'{hi}:Q')
-    pts = base.mark_point(filled=True, size=70).encode(y=alt.Y(f'{y}:N', sort=None), x=f'{x}:Q',
-                                                     tooltip=[y, alt.Tooltip(x, format='.3f'), alt.Tooltip(lo, format='.3f'), alt.Tooltip(hi, format='.3f')])
-    return (rule + pts).properties(width='container', height=max(140, 28 * len(df)))
+    rule = base.mark_rule().encode(y=alt.Y(f'{y}:N', sort=None, axis=ax), x=alt.X(f'{lo}:Q', title=x_title), x2=f'{hi}:Q')
+    pts = base.mark_point(filled=True, size=70).encode(
+        y=alt.Y(f'{y}:N', sort=None, axis=ax), x=f'{x}:Q',
+        tooltip=[y, alt.Tooltip(x, format='.3f'), alt.Tooltip(lo, format='.3f'), alt.Tooltip(hi, format='.3f')])
+    # total chart height includes the axis area, so add room on top of the rows
+    return (rule + pts).properties(width='container', height=30 * len(df) + 100)
 
 
 # ----------------------------------------------------------------------------- tab 1: insights
@@ -64,8 +67,8 @@ def tab_insights():
     ts = load_csv('topic_summary.csv')
     chart = alt.Chart(ts).mark_bar().encode(
         x=alt.X('avg_rating:Q', title='Average overall rating (1-10)'),
-        y=alt.Y('topic_name:N', sort='x', title=None),
-        tooltip=['topic_name', 'n_reviews', 'avg_rating', 'recommend_rate', 'top_terms']).properties(width='container', height=340)
+        y=alt.Y('topic_name:N', sort='x', title=None, axis=alt.Axis(labelLimit=340, labelOverlap=False)),
+        tooltip=['topic_name', 'n_reviews', 'avg_rating', 'recommend_rate', 'top_terms']).properties(width='container', height=440)
     st.altair_chart(chart)
     st.caption('Topics come from MiniLM sentence embeddings clustered with k-means (k = 12). Clusters overlap (silhouette about 0.03), '
                'so read them as useful groupings rather than sharp categories. Two clusters are driven by place names, not complaint types.')
@@ -110,6 +113,8 @@ def tab_drivers():
     if not need('odds_ratios.csv', 'airline_stats.csv', 'stat_tests_summary.csv'):
         return
     src = 'reviews_clean.parquet' if (DATA / 'reviews_clean.parquet').exists() else 'reviews_topics.parquet'
+    if not need(src):
+        return
     df = load_parquet(src)
 
     st.subheader('Recommend rate by cabin')
@@ -146,12 +151,15 @@ def tab_drivers():
     t = t[t['count'] >= 100].copy()
     if len(t):
         t['rate'] = t['sum'] / t['count']
+        t.index = t.index.astype(int).astype(str)
         st.line_chart(t['rate'])
     st.caption('The pooled decline is mostly an airline-mix effect. Among 42 airlines with enough reviews in both periods, the average change was -4.8 points '
                '(60% declined; Wilcoxon p = 0.048, borderline).')
 
     st.subheader('Statistical tests')
-    st.dataframe(load_csv('stat_tests_summary.csv'))
+    tests = load_csv('stat_tests_summary.csv').copy()
+    tests['p_value'] = tests['p_value'].map(lambda p: f'{p:.2e}')
+    st.dataframe(tests)
 
 
 # ----------------------------------------------------------------------------- tab 3: optimizer
